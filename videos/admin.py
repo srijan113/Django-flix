@@ -1,5 +1,9 @@
 from django.contrib import admin
-from .models import Video, AllVideoProxy, PublishedVideoProxy, LiveVideoProxy
+from .models import( Video, 
+                        AllVideoProxy, 
+                        PublishedVideoProxy, 
+                        LiveVideoProxy, 
+                        VideoStatus)
 
 
 class AllVideoProxyAdmin(admin.ModelAdmin):
@@ -24,7 +28,7 @@ class PublishedVideoAdmin(admin.ModelAdmin):
         model = PublishedVideoProxy
 
     def get_queryset(self, request):
-        return PublishedVideoProxy.objects.filter(status=Video.VideoStatus.PUBLISH)
+        return PublishedVideoProxy.objects.filter(status=VideoStatus.PUBLISH)
 
 
 admin.site.register(PublishedVideoProxy, PublishedVideoAdmin)

@@ -1,11 +1,25 @@
 from django.db import models
 from django.utils.text import slugify
+from django.utils import timezone
+
+class VideoStatus(models.TextChoices):
+    PUBLISH = 'PU', 'Publish'
+    DRAFT = 'DU', 'Draft'
+
+class VideoQuerySet(models.QuerySet):
+    def published(self):
+        return self.filter(status = VideoStatus.PUBLISH, publish_timestamp__lte = timezone.now())
+
+class VideoManager(models.Manager):
+    def get_queryset(self):
+        return VideoQuerySet(self.model, using=self._db)
+
+    def published(self):
+        return self.get_queryset().published()
+
 
 
 class Video(models.Model):
-    class VideoStatus(models.TextChoices):
-        PUBLISH = 'PU', 'Publish'
-        DRAFT = 'DU', 'Draft'
     title = models.CharField(max_length=200)
     description = models.TextField()
     slug = models.SlugField(blank=True, null=True)
@@ -16,12 +30,24 @@ class Video(models.Model):
     publish_timestamp = models.DateTimeField(auto_now=False, auto_now_add=False, blank=True, null=True)
     live = models.BooleanField(default=False)
 
+    objects = VideoManager()
+
+    def __str__(self):
+        return self.title
+
     def save(self, *args, **kwargs):
+        if self.status == VideoStatus.PUBLISH and self.publish_timestamp is None:
+            self.publish_timestamp = timezone.now()
+        elif self.status == VideoStatus.DRAFT:
+            self.publish_timestamp = None
+
         if self.slug is None:
             self.slug = slugify(self.title)
         super().save(*args, **kwargs)
 
-
+        
+    def get_playlist_ids(self):
+        return self.playlist_featured.all().values_list('id', flat = True)
 
 class AllVideoProxy(Video):
     class Meta:
