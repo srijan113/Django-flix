@@ -34,10 +34,10 @@ admin.site.register(TVShowSeasonProxy, TVShowSeasonProxyAdmin)
 class TVShowSeasonProxyInline(admin.TabularInline):
     model = TVShowSeasonProxy
     extra = 0
-    fields = ['order', 'title', 'states', 'category']
+    fields = ['order', 'title', 'status', 'category']
 
 class TVShowProxyAdmin(admin.ModelAdmin):
-    inlines = [TVShowSeasonProxyInline]
+    inlines = [TaggedItemInlineAdmin,TVShowSeasonProxyInline]
     fields = ['title', 'description', 'video', 'slug', 'status', 'category']
     list_display = ['title']
     class Meta:

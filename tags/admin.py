@@ -10,7 +10,7 @@ class TaggedItemInlineAdmin(GenericTabularInline):
     extra = 0
 
 class TaggedItemAdmin(admin.ModelAdmin):
-    fields = ['slug', 'content_type', 'objects_id', 'content_object']
+    fields = ['slug', 'content_type', 'object_id', 'content_object']
     readonly_fields = ['content_object']
 
     class Meta:
