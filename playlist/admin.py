@@ -1,9 +1,9 @@
 from django.contrib import admin
 from .models import Playlist, PlaylistItem, TVShowProxy, TVShowSeasonProxy, MovieProxy
-
+from tags.admin import TaggedItemInlineAdmin
 
 class MovieProxyAdmin(admin.ModelAdmin):
-    fields = ['title', 'description', 'video', 'slug', 'status']
+    fields = ['title', 'description', 'video', 'slug', 'status', 'category']
     list_display = ['title']
     class Meta:
         model = MovieProxy
@@ -20,7 +20,7 @@ class SeasonEpisodeInline(admin.TabularInline):
 
 class TVShowSeasonProxyAdmin(admin.ModelAdmin):
     inlines = [SeasonEpisodeInline]
-    list_display = ['title', 'parent', 'status']
+    list_display = ['title', 'parent', 'status', 'category']
 
     class Meta:
         model = TVShowSeasonProxy
@@ -34,11 +34,11 @@ admin.site.register(TVShowSeasonProxy, TVShowSeasonProxyAdmin)
 class TVShowSeasonProxyInline(admin.TabularInline):
     model = TVShowSeasonProxy
     extra = 0
-    fields = ['order', 'title', 'states']
+    fields = ['order', 'title', 'states', 'category']
 
 class TVShowProxyAdmin(admin.ModelAdmin):
     inlines = [TVShowSeasonProxyInline]
-    fields = ['title', 'description', 'video', 'slug', 'status']
+    fields = ['title', 'description', 'video', 'slug', 'status', 'category']
     list_display = ['title']
     class Meta:
         model = TVShowProxy
