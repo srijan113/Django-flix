@@ -1,5 +1,6 @@
 from django.contrib.contenttypes.fields import GenericRelation
 from django.db import models
+from django.db.models import Avg, Max, Min
 from django.utils.text import slugify
 from django.utils import timezone
 from django.db.models.signals import post_save
@@ -8,6 +9,7 @@ from videos.signals import video_publish_timestamp
 from django.utils import timezone
 from categories.models import Category
 from tags.models import TaggedItem
+from ratings.models import Rating
 
 class PlaylistQuerySet(models.QuerySet):
     def published(self):
@@ -41,11 +43,19 @@ class Playlist(models.Model):
     status = models.CharField(max_length=2, choices= VideoStatus.choices, default=VideoStatus.DRAFT)
     publish_timestamp = models.DateTimeField(auto_now=False, auto_now_add=False, blank=True, null=True)
     tags = GenericRelation(TaggedItem, related_query_name="playlist")
+    ratings = GenericRelation(Rating, related_query_name='playlist')
 
     objects = PlaylistManager()
 
     def __str__(self):
         return self.title
+
+    
+    def get_avg_rating(self):
+        return Playlist.objects.filter(id = self.id).aggregate(average = Avg("ratings__value"))
+
+    def get_rating_spread(self):
+        return Playlist.objects.filter(id = self.id).aggregate(max = Max("ratings__value"), min = Min("ratings__value"))
 
         
     def save(self, *args, **kwargs):
