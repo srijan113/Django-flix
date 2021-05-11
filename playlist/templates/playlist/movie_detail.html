@@ -1,11 +1,17 @@
 {% extends 'base.html' %}
 
+
+{% load rating %}
+
 {% block content %}
 <h3>{{object.title}}</h3>
+
+<div>{% rating object=object %}</div>
+<div>
 {{object.title}}
 {{object.get_short_description}}
 {{object.slug}}
 {{object.get_video_id}}
-
 {% include 'videos/embed.html' with video_id=object.get_video_id %}
+</div>
 {% endblock content %}

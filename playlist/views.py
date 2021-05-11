@@ -1,5 +1,9 @@
+from django.db import reset_queries
+from django.db.models import query
+from django.db.models.query_utils import Q, select_related_descend
 from django.shortcuts import render
-from django.http import Http404
+from django.http import Http404, request
+from django.views import View
 from django.views import generic
 from .models import MovieProxy, TVShowProxy, Playlist, TVShowSeasonProxy
 from django.utils import timezone
@@ -60,3 +64,19 @@ class FeturedPlaylistViewList(PlaylistMixin, generic.ListView):
 class FeturedPlaylistViewDetail(PlaylistMixin, generic.DetailView):
     template_name = 'playlist/playlist_detail.html'
     queryset = Playlist.objects.all()
+
+
+class SearchViewList(PlaylistMixin, generic.ListView):
+
+    def get_context_data(self, *args, **kwargs):
+        context = super().get_context_data(*args, **kwargs)
+        query = self.request.GET.get("q")
+        if query is not None:
+            context['title'] = f"Search for {query}"
+        else:
+            context['title'] = "Perform a search"
+        return context
+    
+    def get_queryset(self):
+        query = self.request.GET.get("q")
+        return Playlist.objects.all().movie_or_show().search(query = query)

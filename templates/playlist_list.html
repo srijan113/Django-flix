@@ -2,6 +2,9 @@
 
 {% block content %}
 
+{% if title %}
+    <h2>{{title}} --> {{object_list.count}} result</h2>
+{% endif %}
 
 {% for i in object_list %}
     <div>
