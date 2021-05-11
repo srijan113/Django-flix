@@ -19,5 +19,6 @@
     4. Searching(Movies, category, tags, TV-Show)
     5. User Rating 
 
+**JUST_A_BEGINNER**
 
-**Note**
+This project consits of just a single requirement that is **Django>=3.0** **Python>=3.8**.

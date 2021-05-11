@@ -49,6 +49,6 @@ def rating_post_save(sender, instance, created, *args, **kwargs):
         qs = Rating.objects.filter(user = user, content_type = content_type, object_id = instance.object_id).exclude(pk = instance.pk)
         if qs.exists():
             qs.delete()
-
+ 
 
 post_save.connect(rating_post_save, sender=Rating)
