@@ -21,4 +21,4 @@
 
 **JUST_A_BEGINNER**
 
-This project consits of just a single requirement that is **Django>=3.0** **Python>=3.8**.
+This project requires only **Django>=3.0** **Python>=3.8**.
