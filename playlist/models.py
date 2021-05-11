@@ -15,6 +15,12 @@ class PlaylistQuerySet(models.QuerySet):
     def published(self):
         return self.filter(status = VideoStatus.PUBLISH, publish_timestamp__lte = timezone.now())
 
+    def movie_or_show(self):
+        return self.filter(
+            Q(type = Playlist.PlaylistTypeChoices.MOVIE)|
+            Q(type = Playlist.PlaylistTypeChoices.SHOW)
+        )
+
 class PlaylistManager(models.Manager):
     def get_queryset(self):
         return PlaylistQuerySet(self.model, using=self._db)

@@ -4,7 +4,6 @@ from tags.models import TaggedItem
 
 
 class Category(models.Model):
-
     title = models.CharField(max_length=220)
     slug = models.SlugField(null=True, blank=True)
     active = models.BooleanField(default=True)
@@ -15,6 +14,10 @@ class Category(models.Model):
     class Meta:
         verbose_name = "Category"
         verbose_name_plural = "Categories"
+
+
+    def get_absolute_url(self):
+        return f"/category/{self.slug}/"
 
     def __str__(self):
         return self.title

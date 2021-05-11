@@ -1,13 +1,19 @@
 {% extends 'base.html' %}
 
 {% block content %}
-{% if title %}
-   <h3>{{title}}</h3> 
-{% endif %}
 
-<ul>
-    {% for i in object_list %}
-        <li>{{i}}{{i.get_short_description}}</li>
-    {% endfor %}
-</ul>
+
+{% for i in object_list %}
+    <div>
+        <h3>{{i.title}}</h3>
+        <p>{{i.description}}</p>
+        {% if i.is_movie %}
+                {% include 'movie.html' with movie=i %}
+        {% elif i.is_show %}
+            {% include 'show.html' with show=i %}
+        {% else %}
+        {% endif %}
+    </div>
+{% endfor %}
+
 {% endblock content %}
