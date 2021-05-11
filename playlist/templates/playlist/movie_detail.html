@@ -5,4 +5,7 @@
 {{object.title}}
 {{object.get_short_description}}
 {{object.slug}}
+{{object.get_video_id}}
+
+{% include 'videos/embed.html' with video_id=object.get_video_id %}
 {% endblock content %}

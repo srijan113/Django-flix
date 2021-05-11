@@ -2,6 +2,8 @@ from django.shortcuts import render
 from django.http import Http404
 from django.views import generic
 from .models import MovieProxy, TVShowProxy, Playlist, TVShowSeasonProxy
+from django.utils import timezone
+from videos.models import VideoStatus
 
 
 class PlaylistMixin():
@@ -43,14 +45,25 @@ class TVShowSeasonProxyViewDetail(PlaylistMixin, generic.DetailView):
         kwargs = self.kwargs
         show_slug = kwargs.get("showSlug")
         season_slug = kwargs.get("seasonSlug")
-        qs = self.get_queryset().filter(parent__slug__iexact=show_slug, slug__iexact = season_slug)
-        if not qs.count() == 1:
+        now = timezone.now()
+        try:
+            obj = TVShowSeasonProxy.objects.get(status= VideoStatus.PUBLISH, timestamp__lte=now, parent__slug__iexact=show_slug, slug__iexact=season_slug)
+        # qs = self.get_queryset().filter(parent__slug__iexact=show_slug, slug__iexact = season_slug)
+        # if not qs.count() == 1:
+        #     raise Http404
+        # return qs.first()
+        except TVShowSeasonProxy.MultipleObjectsReturned:
+            qs = TVShowSeasonProxy.objects.filter(parent__slug__iexact=show_slug, slug__iexact=season_slug).published()
+            obj = qs.first()
+        except:
+            obj = None
             raise Http404
-        return qs.first()
+        return obj
 
 
 
 class FeturedPlaylistViewList(PlaylistMixin, generic.ListView):
+    template_name = 'playlist/fetured_list.html'
     queryset = Playlist.objects.featured_playlist()
     title = "Fetured Playlist"
 

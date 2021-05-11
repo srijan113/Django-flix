@@ -5,6 +5,17 @@
 
 {{object.title}}
 {{object.slug}}
+<br>
 
 {{object.get_short_description}}
+
+<h3> {{object.title}} Trailer</h3>
+{% include 'videos/embed.html' with video_id=object.get_video_id %}
+
+
+{% for i in object.seasons %}
+    <li>
+        <a href="{{i.get_absolute_url}}">{{i.order}} {{i.title}}</a>
+    </li>
+{% endfor %}
 {% endblock content %}

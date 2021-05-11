@@ -1,6 +1,6 @@
 from django.contrib.contenttypes.fields import GenericRelation
 from django.db import models
-from django.db.models import Avg, Max, Min
+from django.db.models import Avg, Max, Min, Q
 from django.utils.text import slugify
 from django.utils import timezone
 from django.db.models.signals import post_save
@@ -33,6 +33,7 @@ class Playlist(models.Model):
         SEASON = "SEA", "Season"
         PLAYLIST = "PLY", "Playlist"
     parent = models.ForeignKey("self", blank=True,null=True,on_delete = models.SET_NULL)
+    related = models.ManyToManyField("self", blank= True, related_name = 'related', through='PlaylistRelated')
     category = models.ForeignKey(Category, related_name= 'playlists', null=True, blank=True, on_delete = models.SET_NULL)
     order = models.IntegerField(default=1)
     title = models.CharField(max_length=200)
@@ -52,8 +53,35 @@ class Playlist(models.Model):
 
     def __str__(self):
         return self.title
-
     
+
+    def get_related_items(self):
+        return self.playlistrelated_set.all()
+
+    def get_absolute_url(self):
+        if self.is_movie:
+            return f"/movies/{self.slug}/"
+        if self.is_show:
+            return f"/show/{self.slug}/"
+        if self.is_season:
+            return f"/show/{self.parent.slug}/season/{self.slug}"
+        return f"playlist/{self.slug}"
+
+
+
+    @property
+    def is_season(self):
+        return self.type == Playlist.PlaylistTypeChoices.SEASON  
+    
+    @property
+    def is_movie(self):
+        return self.type == Playlist.PlaylistTypeChoices.MOVIE
+
+    @property
+    def is_show(self):
+        return self.type == Playlist.PlaylistTypeChoices.SHOW
+
+
     def get_avg_rating(self):
         return Playlist.objects.filter(id = self.id).aggregate(average = Avg("ratings__value"))
 
@@ -63,6 +91,20 @@ class Playlist(models.Model):
     def get_short_description(self):
         return ""
 
+    def get_video_id(self):
+        """
+        gets the main if for the TV show for example The office for the mulitple season with multiplel videos in it
+
+        """
+        if self.video is None:
+            return None
+        return self.video.get_video_id()
+
+    def get_clips(self):
+        """
+            gets  your the clip that are related to the playlist 
+        """
+        return self.playlistitem_set.all().published()
         
     def save(self, *args, **kwargs):
         if self.status == VideoStatus.PUBLISH and self.publish_timestamp is None:
@@ -104,6 +146,21 @@ class TVShowProxy(Playlist):
         return f'{self.seasons.count()} Season' 
 
 
+    def get_video_id(self):
+        """
+            gets the main if for the TV show for example The office for the mulitple season with multiplel videos in it
+        """
+        if self.video is None:
+            return None
+        return self.video.get_video_id()
+
+    def get_clips(self):
+        """
+            gets the clips again for the movies
+        """
+        return self.playlistitem_set.all().published()
+
+
 class MovieProxyManager(PlaylistManager):
     def all(self):
         return self.get_queryset().filter(type = Playlist.PlaylistTypeChoices.MOVIE)
@@ -111,6 +168,12 @@ class MovieProxyManager(PlaylistManager):
 class MovieProxy(Playlist):
 
     objects = MovieProxyManager()
+
+    def get_movie_id(self):
+        """
+        get the movies id like linked video direct movies
+        """
+        return self.get_video_id(self)
 
     class Meta:
         proxy = True
@@ -139,11 +202,55 @@ class TVShowSeasonProxy(Playlist):
         self.type = Playlist.PlaylistTypeChoices.SEASON
         super().save(*args, **kwargs)
 
+    def get_season_trailer(self):
+        """
+            get the each season trailer to the user
+        """
+        return self.get_video_id(self)
+
+    def get_episodes(self):
+        """
+            gets  your the episode that are related to the TVshow 
+        """
+        return self.playlistitem_set.all().published()
+
+
+class PlaylistItemQuerySet(models.QuerySet):
+    def published(self):
+        return self.filter(playlist__status = VideoStatus.PUBLISH, 
+                            playlist__publish_timestamp__lte = timezone.now(), 
+                            video__status = VideoStatus.PUBLISH, 
+                            video__publish_timestamp__lte = timezone.now()
+                            )
+
+class PlaylistItemManager(models.Manager):
+    def get_queryset(self):
+        return PlaylistItemQuerySet(self.model, using=self._db)
+
+    def published(self):
+        return self.get_queryset().published() 
+
+
 class PlaylistItem(models.Model):
     playlist = models.ForeignKey(Playlist, on_delete=models.CASCADE)
     video = models.ForeignKey(Video, on_delete=models.CASCADE)
     order = models.IntegerField(default=1)
     timestamp = models.DateTimeField(auto_now_add= True)
 
+    objects = PlaylistItemManager()
+
     class Meta:
-        ordering = ['order', '-timestamp' ]
+        ordering = ['order', '-timestamp']
+
+
+
+def playlistRelatedLimitTo():
+    return Q(type = Playlist.PlaylistTypeChoices.MOVIE) | Q(type = Playlist.PlaylistTypeChoices.SHOW)
+
+
+class PlaylistRelated(models.Model):
+    playlist = models.ForeignKey(Playlist, on_delete=models.CASCADE)
+    related = models.ForeignKey(Playlist, on_delete=models.CASCADE, related_name= 'related_item', limit_choices_to= playlistRelatedLimitTo)
+    order = models.IntegerField(default=1)
+    timestamp = models.DateTimeField(auto_now_add= True)
+    

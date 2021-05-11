@@ -1,5 +1,7 @@
 from django.contrib import admin
-from .models import Playlist, PlaylistItem, TVShowProxy, TVShowSeasonProxy, MovieProxy
+from .models import (Playlist, PlaylistItem, 
+                        TVShowProxy, TVShowSeasonProxy, 
+                        MovieProxy,PlaylistRelated)
 from tags.admin import TaggedItemInlineAdmin
 
 class MovieProxyAdmin(admin.ModelAdmin):
@@ -48,13 +50,21 @@ class TVShowProxyAdmin(admin.ModelAdmin):
 admin.site.register(TVShowProxy, TVShowProxyAdmin)
 
 
-class PlaylistItemAdmin(admin.TabularInline):
+
+class PlaylistRelatedInline(admin.TabularInline):
+    model = PlaylistRelated
+    fk_name = 'playlist'
+    extra = 0
+
+
+class PlaylistItemInline(admin.TabularInline):
     model = PlaylistItem
     extra = 0
 
 class PlaylistAdmin(admin.ModelAdmin):
     list_display = ['title', 'timestamp']
-    inlines = [PlaylistItemAdmin]
+    inlines = [PlaylistRelatedInline, PlaylistItemInline]
+    fields = ['title', 'description','slug', 'status']
 
     class Meta:
         model = Playlist

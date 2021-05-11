@@ -35,6 +35,22 @@ class Video(models.Model):
     def __str__(self):
         return self.title
 
+    def get_video_id(self):
+        if not self.is_published:
+            return None
+        return self.video_id
+    
+    @property
+    def is_published(self):
+        state = self.status
+        if state != VideoStatus.PUBLISH:
+            return False
+        pub_timestamp = self.publish_timestamp
+        if pub_timestamp is None:
+            return False
+        now = timezone.now()
+        return pub_timestamp <= now 
+
     def save(self, *args, **kwargs):
         if self.status == VideoStatus.PUBLISH and self.publish_timestamp is None:
             self.publish_timestamp = timezone.now()

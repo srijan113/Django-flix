@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<ul>
+    {% for i in object_list %}
+        <div>
+            <h3>{{i.title}}</h3>
+            <p>{{i.description}}</p>
+            {% for playlist in i.get_related_items %}
+                {% if playlist.related.is_movie %}
+                    {% include 'movie.html' with movie=playlist.related %}
+                {% elif playlist.related.is_show %}
+                    {% include 'show.html' with show=playlist.related %}
+                {% else %}
+                {% endif %}
+
+            {% endfor %}
+        </div>
+    {% endfor %}
+</ul>
+{% endblock content %}
